@@ -1,0 +1,12 @@
+FROM python:3.10-slim
+
+LABEL maintainer="takatost@gmail.com"
+
+WORKDIR /app/api
+
+RUN apt-get update && \
+    apt-get install -y bash curl wget vim gcc g++ python3-dev libc-dev libffi-dev nodejs
+
+COPY requirements.txt /app/api/requirements.txt
+
+RUN pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/

@@ -7,7 +7,7 @@ import requests
 from flask import request, redirect, current_app, session
 from flask_restful import Resource
 
-from libs.oauth import OAuthUserInfo, GitHubOAuth, GoogleOAuth
+from libs.oauth import OAuthUserInfo, GitHubOAuth, GoogleOAuth, LarkOAuth
 from extensions.ext_database import db
 from models.account import Account, AccountStatus
 from services.account_service import AccountService, RegisterService
@@ -28,9 +28,16 @@ def get_oauth_providers():
                                    redirect_uri=current_app.config.get(
                                        'CONSOLE_API_URL') + '/console/api/oauth/authorize/google')
 
+        lark_oauth = LarkOAuth(client_id=current_app.config.get('LARK_CLIENT_ID'),
+                            client_secret=current_app.config.get(
+                                'LARK_CLIENT_SECRET'),
+                            redirect_uri=current_app.config.get(
+                                'CONSOLE_API_URL') + '/console/api/oauth/authorize/lark')
+
         OAUTH_PROVIDERS = {
             'github': github_oauth,
-            'google': google_oauth
+            'google': google_oauth,
+            'lark': lark_oauth
         }
         return OAUTH_PROVIDERS
 

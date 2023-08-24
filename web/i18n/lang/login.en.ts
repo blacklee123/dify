@@ -23,6 +23,7 @@ const translation = {
   sendUsMail: 'Email us your introduction, and we\'ll handle the invitation request.',
   acceptPP: 'I have read and accept the privacy policy',
   reset: 'Please run following command to reset your password',
+  withLark: 'Continue with Lark',
   withGitHub: 'Continue with GitHub',
   withGoogle: 'Continue with Google',
   rightTitle: 'Unlock the full potential of LLM',
