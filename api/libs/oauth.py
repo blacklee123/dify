@@ -141,3 +141,47 @@ class GoogleOAuth(OAuth):
         )
 
 
+class LarkOAuth(OAuth):
+    _AUTH_URL = 'https://passport.feishu.cn/suite/passport/oauth/authorize'
+    _TOKEN_URL = 'https://passport.feishu.cn/suite/passport/oauth/token'
+    _USER_INFO_URL = 'https://passport.feishu.cn/suite/passport/oauth/userinfo'
+
+    def get_authorization_url(self):
+        params = {
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_uri,
+            'response_type': 'code'
+        }
+        return f"{self._AUTH_URL}?{urllib.parse.urlencode(params)}"
+
+    def get_access_token(self, code: str):
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'code': code,
+            'redirect_uri': self.redirect_uri
+        }
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        response = requests.post(self._TOKEN_URL, data=data, headers=headers)
+
+        response_json = response.json()
+        access_token = response_json.get('access_token')
+
+        if not access_token:
+            raise ValueError(f"Error in Lark OAuth: {response_json}")
+
+        return access_token
+
+    def get_raw_user_info(self, token: str):
+        headers = {'Authorization': f"Bearer {token}"}
+        response = requests.get(self._USER_INFO_URL, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    def _transform_user_info(self, raw_info: dict) -> OAuthUserInfo:
+        return OAuthUserInfo(
+            id=str(raw_info['user_id']),
+            name=raw_info['name'],
+            email=raw_info['email']
+        )

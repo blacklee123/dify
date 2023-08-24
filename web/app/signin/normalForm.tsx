@@ -148,6 +148,25 @@ const NormalForm = () => {
           {!IS_CE_EDITION && (
             <div className="flex flex-col gap-3 mt-6">
               <div className='w-full'>
+                <a href={`${apiPrefix}/oauth/login/lark`}>
+                  <Button
+                    type='default'
+                    disabled={isLoading}
+                    className='w-full hover:!bg-gray-50 !text-sm !font-medium'
+                  >
+                    <>
+                      <span className={
+                        classNames(
+                          style.larkIcon,
+                          'w-5 h-5 mr-2',
+                        )
+                      } />
+                      <span className="truncate text-gray-800">{t('login.withLark')}</span>
+                    </>
+                  </Button>
+                </a>
+              </div>
+              {/* <div className='w-full'>
                 <a href={`${apiPrefix}/oauth/login/github`}>
                   <Button
                     type='default'
@@ -165,8 +184,8 @@ const NormalForm = () => {
                     </>
                   </Button>
                 </a>
-              </div>
-              <div className='w-full'>
+              </div> */}
+              {/* <div className='w-full'>
                 <a href={`${apiPrefix}/oauth/login/google`}>
                   <Button
                     type='default'
@@ -184,7 +203,7 @@ const NormalForm = () => {
                     </>
                   </Button>
                 </a>
-              </div>
+              </div> */}
             </div>
           )}
 

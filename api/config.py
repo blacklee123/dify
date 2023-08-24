@@ -259,6 +259,8 @@ class CloudEditionConfig(Config):
         self.GITHUB_CLIENT_SECRET = get_env('GITHUB_CLIENT_SECRET')
         self.GOOGLE_CLIENT_ID = get_env('GOOGLE_CLIENT_ID')
         self.GOOGLE_CLIENT_SECRET = get_env('GOOGLE_CLIENT_SECRET')
+        self.LARK_CLIENT_ID = get_env('LARK_CLIENT_ID')
+        self.LARK_CLIENT_SECRET = get_env('LARK_CLIENT_SECRET')
         self.OAUTH_REDIRECT_PATH = get_env('OAUTH_REDIRECT_PATH')
 
 

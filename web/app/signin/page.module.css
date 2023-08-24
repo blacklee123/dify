@@ -1,3 +1,7 @@
+.larkIcon {
+  background: center/contain url("./assets/lark.png");
+}
+
 .githubIcon {
   background: center/contain url('./assets/github.svg');
 }
