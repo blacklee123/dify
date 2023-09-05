@@ -40,10 +40,12 @@ const translation = {
   actionMsg: {
     noModification: 'No modifications at the moment.',
     modifiedSuccessfully: 'Modified successfully',
-    modificationFailed: 'Modification failed',
+    modifiedUnsuccessfully: 'Modified unsuccessfully',
     copySuccessfully: 'Copied successfully',
     paySucceeded: 'Payment succeeded',
     payCancelled: 'Payment cancelled',
+    generatedSuccessfully: 'Generated successfully',
+    generatedUnsuccessfully: 'Generated unsuccessfully',
   },
   model: {
     params: {
@@ -135,11 +137,13 @@ const translation = {
     inviteTeamMemberTip: 'They can access your team data directly after signing in.',
     email: 'Email',
     emailInvalid: 'Invalid Email Format',
-    emailPlaceholder: 'Input Email',
-    sendInvite: 'Add',
+    emailPlaceholder: 'Please input emails',
+    sendInvite: 'Send Invite',
+    invitedAsRole: 'Invited as {{role}} user',
     invitationSent: 'Invitation sent',
     invitationSentTip: 'Invitation sent, and they can sign in to Dify to access your team data.',
     invitationLink: 'Invitation Link',
+    failedinvitationEmails: 'Below users were not invited successfully',
     ok: 'OK',
     removeFromTeam: 'Remove from team',
     removeFromTeamTip: 'Will remove team access',
@@ -333,6 +337,12 @@ const translation = {
     'whisper-1': 'Whisper-1',
     'claude-instant-1': 'Claude-Instant',
     'claude-2': 'Claude-2',
+  },
+  chat: {
+    renameConversation: 'Rename Conversation',
+    conversationName: 'Conversation name',
+    conversationNamePlaceholder: 'Please input conversation name',
+    conversationNameCanNotEmpty: 'Conversation name required',
   },
 }
 
