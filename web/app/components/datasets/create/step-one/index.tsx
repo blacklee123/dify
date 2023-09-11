@@ -71,7 +71,7 @@ const StepOne = ({
   const { dataset } = useDatasetDetailContext()
   const [showModal, setShowModal] = useState(false)
   const [currentFile, setCurrentFile] = useState<File | undefined>()
-  const [currentNotionPage, setCurrentNotionPage] = useState<Page | undefined>()
+  const [currentNotionPage, setCurrentNotionPage] = useState<NotionPage | undefined>()
   const [currentLarkPage, setCurrentLarkPage] = useState<string | undefined>()
   const { t } = useTranslation()
 
@@ -90,7 +90,7 @@ const StepOne = ({
     setCurrentFile(undefined)
   }
 
-  const updateCurrentPage = (page: Page) => {
+  const updateCurrentPage = (page: NotionPage) => {
     setCurrentNotionPage(page)
   }
 
