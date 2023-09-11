@@ -8,7 +8,7 @@
             "trial"
         ],
         "quota_unit": "times",
-        "quota_limit": 200
+        "quota_limit": 200000
     },
     "model_flexibility": "fixed",
     "price_config": {

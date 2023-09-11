@@ -116,6 +116,10 @@ services:
       SENTRY_PROFILES_SAMPLE_RATE: 1.0
       LARK_CLIENT_ID: ''
       LARK_CLIENT_SECRET: ''
+      HOSTED_OPENAI_ENABLED: false
+      HOSTED_OPENAI_API_KEY: ''
+      HOSTED_OPENAI_QUOTA_LIMIT: 200000
+      ADMIN_API_KEY: ''
     depends_on:
       - db
       - redis
@@ -172,6 +176,10 @@ services:
       RESEND_API_KEY: ''
       LARK_CLIENT_ID: ''
       LARK_CLIENT_SECRET: ''
+      HOSTED_OPENAI_ENABLED: false
+      HOSTED_OPENAI_API_KEY: ''
+      HOSTED_OPENAI_QUOTA_LIMIT: 200000
+      ADMIN_API_KEY: ''
     depends_on:
       - db
       - redis
