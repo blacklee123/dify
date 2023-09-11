@@ -1,6 +1,6 @@
 FROM blacklee123/dify-api:base
 
-LABEL maintainer="takatost@gmail.com"
+LABEL maintainer="15656564262@163.com"
 
 ENV FLASK_APP app.py
 ENV EDITION SELF_HOSTED

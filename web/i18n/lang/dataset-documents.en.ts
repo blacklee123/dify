@@ -3,6 +3,7 @@ const translation = {
     title: 'Documents',
     desc: 'All files of the dataset are shown here, and the entire dataset can be linked to Dify citations or indexed via the Chat plugin.',
     addFile: 'add file',
+    addLark: 'add lark page',
     addPages: 'Add Pages',
     table: {
       header: {

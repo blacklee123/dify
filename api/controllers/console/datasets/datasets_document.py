@@ -31,6 +31,7 @@ from models.model import UploadFile
 from services.dataset_service import DocumentService, DatasetService
 from tasks.add_document_to_index_task import add_document_to_index_task
 from tasks.remove_document_from_index_task import remove_document_from_index_task
+from utils.lark_download.download import LarkWiki2Md
 
 dataset_fields = {
     'id': fields.String,
@@ -464,6 +465,26 @@ class DocumentBatchIndexingEstimateApi(DocumentResource):
                 }
                 info_list.append(notion_info)
 
+        if dataset.data_source_type == 'lark_import':
+            file_details = db.session.query(UploadFile).filter(
+                UploadFile.tenant_id == current_user.current_tenant_id,
+                UploadFile.id in info_list
+            ).all()
+
+            if file_details is None:
+                raise NotFound("File not found.")
+
+            indexing_runner = IndexingRunner()
+            try:
+                response = indexing_runner.file_indexing_estimate(current_user.current_tenant_id, file_details,
+                                                                  data_process_rule_dict, None,
+                                                                  'English', dataset_id)
+            except LLMBadRequestError:
+                raise ProviderNotInitializeError(
+                    f"No Embedding Model available. Please configure a valid provider "
+                    f"in the Settings -> Model Provider.")
+            except ProviderTokenNotInitError as ex:
+                raise ProviderNotInitializeError(ex.description)
         if dataset.data_source_type == 'upload_file':
             file_details = db.session.query(UploadFile).filter(
                 UploadFile.tenant_id == current_user.current_tenant_id,
@@ -476,6 +497,23 @@ class DocumentBatchIndexingEstimateApi(DocumentResource):
             indexing_runner = IndexingRunner()
             try:
                 response = indexing_runner.file_indexing_estimate(current_user.current_tenant_id, file_details,
+                                                                  data_process_rule_dict, None,
+                                                                  'English', dataset_id)
+            except LLMBadRequestError:
+                raise ProviderNotInitializeError(
+                    f"No Embedding Model available. Please configure a valid provider "
+                    f"in the Settings -> Model Provider.")
+            except ProviderTokenNotInitError as ex:
+                raise ProviderNotInitializeError(ex.description)
+        elif dataset.data_source_type == 'lark_import':
+            exector = LarkWiki2Md(current_app.config.get('LARK_CLIENT_ID'), current_app.config.get('LARK_CLIENT_SECRET'), False)
+            # spliter = MD2HtmlSplitter(split_chunk_size=150, single_block_overlap=20, mul_block_overlap_threshold=20,
+            #                               mul_block_overlap_ratio=2)
+            _, content = exector.download(info_list[0])
+
+            indexing_runner = IndexingRunner()
+            try:
+                response = indexing_runner.lark_indexing_estimate(current_user.current_tenant_id, [content],
                                                                   data_process_rule_dict, None,
                                                                   'English', dataset_id)
             except LLMBadRequestError:

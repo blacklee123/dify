@@ -1,5 +1,5 @@
-TAG?=0.3.15
-VERSION:=0.3.15
+TAG?=0.3.20
+VERSION:=0.3.20
 NAME:=dify-api
 DOCKER_REPOSITORY:=blacklee123
 DOCKER_IMAGE_NAME:=$(DOCKER_REPOSITORY)/$(NAME)
@@ -40,7 +40,8 @@ push:
 	docker push $(DOCKER_IMAGE_NAME):latest
 
 run:
-	python3 manage.py runserver 0.0.0.0:10002 --settings=upload.settings.dev
+	export FLASK_APP=app.py
+	flask run --host 0.0.0.0 --port=5001 --debug
 
 version-set:
 	next="$(TAG)" && \

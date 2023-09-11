@@ -15,7 +15,7 @@ from .app import app, site, completion, model_config, statistic, conversation, m
 from .auth import login, oauth, data_source_oauth, activate
 
 # Import datasets controllers
-from .datasets import datasets, datasets_document, datasets_segments, file, hit_testing, data_source
+from .datasets import datasets, datasets_document, datasets_segments, file, hit_testing, data_source, lark
 
 # Import workspace controllers
 from .workspace import workspace, members, providers, model_providers, account, tool_providers, models

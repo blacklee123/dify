@@ -5,6 +5,7 @@ export enum DataSourceType {
   FILE = 'upload_file',
   NOTION = 'notion_import',
   WEB = 'web_import',
+  LARK = 'lark_import',
 }
 
 export type DataSet = {

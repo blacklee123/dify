@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from flask import request
+from flask import request, current_app
 from flask_login import current_user
 from core.login.login import login_required
 from flask_restful import Resource, reqparse, fields, marshal, marshal_with
@@ -20,6 +20,7 @@ from models.dataset import DocumentSegment, Document
 from models.model import UploadFile
 from services.dataset_service import DatasetService, DocumentService
 from services.provider_service import ProviderService
+from utils.lark_download.download import LarkWiki2Md
 
 dataset_detail_fields = {
     'id': fields.String,
@@ -289,6 +290,26 @@ class DatasetIndexingEstimateApi(Resource):
 
             try:
                 response = indexing_runner.file_indexing_estimate(current_user.current_tenant_id, file_details,
+                                                                  args['process_rule'], args['doc_form'],
+                                                                  args['doc_language'], args['dataset_id'],
+                                                                  args['indexing_technique'])
+            except LLMBadRequestError:
+                raise ProviderNotInitializeError(
+                    f"No Embedding Model available. Please configure a valid provider "
+                    f"in the Settings -> Model Provider.")
+            except ProviderTokenNotInitError as ex:
+                raise ProviderNotInitializeError(ex.description)
+        elif args['info_list']['data_source_type'] == 'lark_import':
+            file_ids = args['info_list']['file_info_list']['file_ids']
+            exector = LarkWiki2Md(current_app.config.get('LARK_CLIENT_ID'), current_app.config.get('LARK_CLIENT_SECRET'), False)
+            # spliter = MD2HtmlSplitter(split_chunk_size=150, single_block_overlap=20, mul_block_overlap_threshold=20,
+            #                               mul_block_overlap_ratio=2)
+            _, file_details = exector.download(file_ids[0])
+
+            indexing_runner = IndexingRunner()
+
+            try:
+                response = indexing_runner.lark_indexing_estimate(current_user.current_tenant_id, [file_details],
                                                                   args['process_rule'], args['doc_form'],
                                                                   args['doc_language'], args['dataset_id'],
                                                                   args['indexing_technique'])

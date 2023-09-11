@@ -18,6 +18,7 @@ const translation = {
       file: 'Import from text file',
       notion: 'Sync from Notion',
       web: 'Sync from web site',
+      lark: 'Sync from web lark',
     },
     uploader: {
       title: 'Upload text file',
@@ -55,6 +56,8 @@ const translation = {
     segmentation: 'Segmentation settings',
     auto: 'Automatic',
     autoDescription: 'Automatically set segmentation and preprocessing rules. Unfamiliar users are recommended to select this.',
+    lark: 'LarkDoc',
+    larkDescription: 'LarkDoc set segmentation and preprocessing rules. LarkDoc are recommended to select this.',
     custom: 'Custom',
     customDescription: 'Customize segmentation rules, segmentation length, and preprocessing rules, etc.',
     separator: 'Segment identifier',

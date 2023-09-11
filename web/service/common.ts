@@ -86,6 +86,14 @@ export const fetchFilePreview: Fetcher<{ content: string }, { fileID: string }> 
   return get(`/files/${fileID}/preview`) as Promise<{ content: string }>
 }
 
+export const fetchLarkPreview: Fetcher<{ content: string; title: string }, { fileID: string }> = ({ fileID }) => {
+  return get('/lark/preview', {
+    params: {
+      link: fileID,
+    },
+  }) as Promise<{ content: string; title: string }>
+}
+
 export const fetchCurrentWorkspace: Fetcher<ICurrentWorkspace, { url: string; params: Record<string, any> }> = ({ url, params }) => {
   return get(url, { params }) as Promise<ICurrentWorkspace>
 }

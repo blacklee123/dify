@@ -1,12 +1,14 @@
 FROM python:3.10-slim
 
-LABEL maintainer="takatost@gmail.com"
+LABEL maintainer="15656564262@163.com"
 
 WORKDIR /app/api
 
 RUN apt-get update && \
-    apt-get install -y bash curl wget vim gcc g++ python3-dev libc-dev libffi-dev nodejs
+    apt-get install -y --allow-unauthenticated --no-install-recommends bash curl wget vim gcc g++ python3-dev libc-dev libffi-dev nodejs libgl1-mesa-glx libglib2.0-dev
 
 COPY requirements.txt /app/api/requirements.txt
+COPY requirements.lark.txt /app/api/requirements.lark.txt
 
 RUN pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install -r requirements.lark.txt -i https://mirrors.aliyun.com/pypi/simple/

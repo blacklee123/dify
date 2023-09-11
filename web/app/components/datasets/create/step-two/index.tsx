@@ -43,6 +43,7 @@ type StepTwoProps = {
   dataSourceType: DataSourceType
   files: CustomFile[]
   notionPages?: NotionPage[]
+  larkPages?: string
   onStepChange?: (delta: number) => void
   updateIndexingTypeCache?: (type: string) => void
   updateResultCache?: (res: createDocumentResponse) => void
@@ -53,6 +54,7 @@ type StepTwoProps = {
 enum SegmentType {
   AUTO = 'automatic',
   CUSTOM = 'custom',
+  LARK = 'lark',
 }
 enum IndexingType {
   QUALIFIED = 'high_quality',
@@ -69,6 +71,7 @@ const StepTwo = ({
   dataSourceType,
   files,
   notionPages = [],
+  larkPages = '',
   onStepChange,
   updateIndexingTypeCache,
   updateResultCache,
@@ -83,7 +86,7 @@ const StepTwo = ({
   const [scrolled, setScrolled] = useState(false)
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const [previewScrolled, setPreviewScrolled] = useState(false)
-  const [segmentationType, setSegmentationType] = useState<SegmentType>(SegmentType.AUTO)
+  const [segmentationType, setSegmentationType] = useState<SegmentType>(dataSourceType === DataSourceType.LARK ? SegmentType.LARK : SegmentType.AUTO)
   const [segmentIdentifier, setSegmentIdentifier] = useState('\\n')
   const [max, setMax] = useState(1000)
   const [rules, setRules] = useState<PreProcessingRule[]>([])
@@ -104,8 +107,9 @@ const StepTwo = ({
   const [showPreview, { setTrue: setShowPreview, setFalse: hidePreview }] = useBoolean()
   const [customFileIndexingEstimate, setCustomFileIndexingEstimate] = useState<IndexingEstimateResponse | null>(null)
   const [automaticFileIndexingEstimate, setAutomaticFileIndexingEstimate] = useState<IndexingEstimateResponse | null>(null)
+  const [larkFileIndexingEstimate, setLarkFileIndexingEstimate] = useState<IndexingEstimateResponse | null>(null)
   const fileIndexingEstimate = (() => {
-    return segmentationType === SegmentType.AUTO ? automaticFileIndexingEstimate : customFileIndexingEstimate
+    return segmentationType === SegmentType.AUTO ? automaticFileIndexingEstimate : segmentationType === SegmentType.LARK ? larkFileIndexingEstimate : customFileIndexingEstimate
   })()
 
   const scrollHandle = (e: Event) => {
@@ -163,7 +167,8 @@ const StepTwo = ({
     const res = await didFetchFileIndexingEstimate(getFileIndexingEstimateParams(docForm))
     if (segmentationType === SegmentType.CUSTOM)
       setCustomFileIndexingEstimate(res)
-
+    else if (segmentationType === SegmentType.LARK)
+      setLarkFileIndexingEstimate(res)
     else
       setAutomaticFileIndexingEstimate(res)
   }
@@ -236,6 +241,21 @@ const StepTwo = ({
         dataset_id: datasetId,
       }
     }
+    if (dataSourceType === DataSourceType.LARK) {
+      params = {
+        info_list: {
+          data_source_type: dataSourceType,
+          file_info_list: {
+            file_ids: [larkPages],
+          },
+        },
+        indexing_technique: getIndexing_technique(),
+        process_rule: getProcessRule(),
+        doc_form: docForm,
+        doc_language: docLanguage,
+        dataset_id: datasetId,
+      }
+    }
     if (dataSourceType === DataSourceType.NOTION) {
       params = {
         info_list: {
@@ -278,6 +298,11 @@ const StepTwo = ({
       if (dataSourceType === DataSourceType.FILE) {
         params.data_source.info_list.file_info_list = {
           file_ids: files.map(file => file.id),
+        }
+      }
+      if (dataSourceType === DataSourceType.LARK) {
+        params.data_source.info_list.file_info_list = {
+          file_ids: [larkPages],
         }
       }
       if (dataSourceType === DataSourceType.NOTION)
@@ -371,6 +396,8 @@ const StepTwo = ({
     setPreviewSwitched(true)
     if (segmentationType === SegmentType.AUTO)
       setAutomaticFileIndexingEstimate(null)
+    else if (segmentationType === SegmentType.LARK)
+      setLarkFileIndexingEstimate(null)
     else
       setCustomFileIndexingEstimate(null)
     await fetchFileIndexingEstimate(DocForm.QA)
@@ -424,6 +451,12 @@ const StepTwo = ({
       fetchFileIndexingEstimate()
       setPreviewSwitched(false)
     }
+    else if (segmentationType === SegmentType.LARK) {
+      setLarkFileIndexingEstimate(null)
+      setShowPreview()
+      fetchFileIndexingEstimate()
+      setPreviewSwitched(false)
+    }
     else {
       hidePreview()
       setCustomFileIndexingEstimate(null)
@@ -451,6 +484,21 @@ const StepTwo = ({
               <div className={s.typeHeader}>
                 <div className={s.title}>{t('datasetCreation.stepTwo.auto')}</div>
                 <div className={s.tip}>{t('datasetCreation.stepTwo.autoDescription')}</div>
+              </div>
+            </div>
+            <div
+              className={cn(
+                s.radioItem,
+                s.segmentationItem,
+                segmentationType === SegmentType.LARK && s.active,
+              )}
+              onClick={() => setSegmentationType(SegmentType.LARK)}
+            >
+              <span className={cn(s.typeIcon, s.auto)} />
+              <span className={cn(s.radio)} />
+              <div className={s.typeHeader}>
+                <div className={s.title}>{t('datasetCreation.stepTwo.lark')}</div>
+                <div className={s.tip}>{t('datasetCreation.stepTwo.larkDescription')}</div>
               </div>
             </div>
             <div
@@ -629,6 +677,14 @@ const StepTwo = ({
                           <span>{t('datasetCreation.stepTwo.fileUnit')}</span>
                         </span>
                       )}
+                    </div>
+                  </>
+                )}
+                {dataSourceType === DataSourceType.FILE && (
+                  <>
+                    <div className='mb-2 text-xs font-medium text-gray-500'>{t('datasetCreation.stepTwo.fileSource')}</div>
+                    <div className='flex items-center text-sm leading-6 font-medium text-gray-800'>
+                      {larkPages}
                     </div>
                   </>
                 )}

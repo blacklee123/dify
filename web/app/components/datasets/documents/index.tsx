@@ -84,6 +84,7 @@ const Documents: FC<IDocumentsProps> = ({ datasetId }) => {
   const [notionPageSelectorModalVisible, setNotionPageSelectorModalVisible] = useState(false)
   const [timerCanRun, setTimerCanRun] = useState(true)
   const isDataSourceNotion = dataset?.data_source_type === DataSourceType.NOTION
+  const isDataSourceLark = dataset?.data_source_type === DataSourceType.LARK
   const embeddingAvailable = !!dataset?.embedding_available
 
   const query = useMemo(() => {
@@ -209,8 +210,9 @@ const Documents: FC<IDocumentsProps> = ({ datasetId }) => {
           {embeddingAvailable && (
             <Button type='primary' onClick={routeToDocCreate} className='!h-8 !text-[13px]'>
               <PlusIcon className='h-4 w-4 mr-2 stroke-current' />
+              {isDataSourceLark && t('datasetDocuments.list.addLark')}
               {isDataSourceNotion && t('datasetDocuments.list.addPages')}
-              {!isDataSourceNotion && t('datasetDocuments.list.addFile')}
+              {!isDataSourceNotion && !isDataSourceLark && t('datasetDocuments.list.addFile')}
             </Button>
           )}
         </div>

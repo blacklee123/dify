@@ -25,7 +25,7 @@ const DatasetUpdateForm = ({ datasetId }: DatasetUpdateFormProps) => {
   const [isShowSetAPIKey, { setTrue: showSetAPIKey, setFalse: hideSetAPIkey }] = useBoolean()
   const [hasConnection, setHasConnection] = useState(true)
   const [isShowDataSourceSetting, { setTrue: showDataSourceSetting, setFalse: hideDataSourceSetting }] = useBoolean()
-  const [dataSourceType, setDataSourceType] = useState<DataSourceType>(DataSourceType.FILE)
+  const [dataSourceType, setDataSourceType] = useState<DataSourceType>(DataSourceType.LARK)
   const [step, setStep] = useState(1)
   const [indexingTypeCache, setIndexTypeCache] = useState('')
   const [fileList, setFiles] = useState<FileItem[]>([])
@@ -34,8 +34,12 @@ const DatasetUpdateForm = ({ datasetId }: DatasetUpdateFormProps) => {
   const { embeddingsDefaultModel } = useProviderContext()
 
   const [notionPages, setNotionPages] = useState<NotionPage[]>([])
+  const [larkPages, setLarkPages] = useState<string>()
   const updateNotionPages = (value: NotionPage[]) => {
     setNotionPages(value)
+  }
+  const updateLarkPages = (value: string) => {
+    setLarkPages(value)
   }
 
   const updateFileList = (preparedFiles: FileItem[]) => {
@@ -122,6 +126,8 @@ const DatasetUpdateForm = ({ datasetId }: DatasetUpdateFormProps) => {
           updateFileList={updateFileList}
           notionPages={notionPages}
           updateNotionPages={updateNotionPages}
+          larkPages={larkPages}
+          updateLarkPages={updateLarkPages}
           onStepChange={nextStep}
         />}
         {(step === 2 && (!datasetId || (datasetId && !!detail))) && <StepTwo
@@ -132,6 +138,7 @@ const DatasetUpdateForm = ({ datasetId }: DatasetUpdateFormProps) => {
           dataSourceType={dataSourceType}
           files={fileList.map(file => file.file)}
           notionPages={notionPages}
+          larkPages={larkPages}
           onStepChange={changeStep}
           updateIndexingTypeCache={updateIndexingTypeCache}
           updateResultCache={updateResultCache}
@@ -146,7 +153,7 @@ const DatasetUpdateForm = ({ datasetId }: DatasetUpdateFormProps) => {
       {isShowSetAPIKey && <AccountSetting activeTab="provider" onCancel={async () => {
         hideSetAPIkey()
       }} />}
-      {isShowDataSourceSetting && <AccountSetting activeTab="data-source" onCancel={hideDataSourceSetting}/>}
+      {isShowDataSourceSetting && <AccountSetting activeTab="data-source" onCancel={hideDataSourceSetting} />}
     </div>
   )
 }

@@ -18,6 +18,7 @@ const translation = {
       file: '导入已有文本',
       notion: '同步自 Notion 内容',
       web: '同步自 Web 站点',
+      lark: '同步自飞书文档',
     },
     uploader: {
       title: '上传文本文件',
@@ -55,6 +56,8 @@ const translation = {
     segmentation: '分段设置',
     auto: '自动分段与清洗',
     autoDescription: '自动设置分段规则与预处理规则，如果不了解这些参数建议选择此项',
+    lark: '飞书专用',
+    larkDescription: '飞书专用分段规则与预处理规则，飞书文档请选择此项建议选择此项',
     custom: '自定义',
     customDescription: '自定义分段规则、分段长度以及预处理规则等参数',
     separator: '分段标识符',

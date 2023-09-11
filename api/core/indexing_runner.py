@@ -1,3 +1,4 @@
+import os
 import datetime
 import json
 import logging
@@ -29,7 +30,8 @@ from models.dataset import Document as DatasetDocument
 from models.dataset import Dataset, DocumentSegment, DatasetProcessRule
 from models.model import UploadFile
 from models.source import DataSourceBinding
-
+from utils.lark_download.download import LarkWiki2Md
+from utils.doc_splitter.splitter import MD2HtmlSplitter
 
 class IndexingRunner:
 
@@ -295,6 +297,84 @@ class IndexingRunner:
             "preview": preview_texts
         }
 
+    def lark_indexing_estimate(self, tenant_id: str, text_docs: list[Document], tmp_processing_rule: dict,
+                               doc_form: str = None, doc_language: str = 'English', dataset_id: str = None,
+                               indexing_technique: str = 'economy') -> dict:
+        """
+        Estimate the indexing for the document.
+        """
+        embedding_model = None
+        if dataset_id:
+            dataset = Dataset.query.filter_by(
+                id=dataset_id
+            ).first()
+            if not dataset:
+                raise ValueError('Dataset not found.')
+            if dataset.indexing_technique == 'high_quality' or indexing_technique == 'high_quality':
+                embedding_model = ModelFactory.get_embedding_model(
+                    tenant_id=dataset.tenant_id,
+                    model_provider_name=dataset.embedding_model_provider,
+                    model_name=dataset.embedding_model
+                )
+        else:
+            if indexing_technique == 'high_quality':
+                embedding_model = ModelFactory.get_embedding_model(
+                    tenant_id=tenant_id
+                )
+        tokens = 0
+        preview_texts = []
+        total_segments = 0
+
+        processing_rule = DatasetProcessRule(
+            mode=tmp_processing_rule["mode"],
+            rules=json.dumps(tmp_processing_rule["rules"])
+        )
+
+        # get splitter
+        splitter = self._get_splitter(processing_rule)
+
+        # split to documents
+        documents = self._split_to_documents_for_estimate(
+            text_docs=text_docs,
+            splitter=splitter,
+            processing_rule=processing_rule
+        )
+
+        total_segments += len(documents)
+
+        for document in documents:
+            if len(preview_texts) < 5:
+                preview_texts.append(document.page_content)
+            if indexing_technique == 'high_quality' or embedding_model:
+                tokens += embedding_model.get_num_tokens(
+                    self.filter_string(document.page_content))
+
+        if doc_form and doc_form == 'qa_model':
+            text_generation_model = ModelFactory.get_text_generation_model(
+                tenant_id=tenant_id
+            )
+            if len(preview_texts) > 0:
+                # qa model document
+                response = LLMGenerator.generate_qa_document(
+                    current_user.current_tenant_id, preview_texts[0], doc_language)
+                document_qa_list = self.format_split_text(response)
+                return {
+                    "total_segments": total_segments * 20,
+                    "tokens": total_segments * 2000,
+                    "total_price": '{:f}'.format(
+                        text_generation_model.calc_tokens_price(total_segments * 2000, MessageType.HUMAN)),
+                    "currency": embedding_model.get_currency(),
+                    "qa_preview": document_qa_list,
+                    "preview": preview_texts
+                }
+        return {
+            "total_segments": total_segments,
+            "tokens": tokens,
+            "total_price": '{:f}'.format(embedding_model.calc_tokens_price(tokens)) if embedding_model else 0,
+            "currency": embedding_model.get_currency() if embedding_model else 'USD',
+            "preview": preview_texts
+        }
+
     def notion_indexing_estimate(self, tenant_id: str, notion_info_list: list, tmp_processing_rule: dict,
                                  doc_form: str = None, doc_language: str = 'English', dataset_id: str = None,
                                  indexing_technique: str = 'economy') -> dict:
@@ -393,7 +473,7 @@ class IndexingRunner:
 
     def _load_data(self, dataset_document: DatasetDocument) -> List[Document]:
         # load file
-        if dataset_document.data_source_type not in ["upload_file", "notion_import"]:
+        if dataset_document.data_source_type not in ["upload_file", "notion_import", "lark_import"]:
             return []
 
         data_source_info = dataset_document.data_source_info_dict
@@ -408,6 +488,13 @@ class IndexingRunner:
 
             if file_detail:
                 text_docs = FileExtractor.load(file_detail)
+        elif dataset_document.data_source_type == 'lark_import':
+            if not data_source_info or 'upload_file_id' not in data_source_info:
+                raise ValueError("no upload file found")
+
+            exector = LarkWiki2Md(os.environ.get('LARK_CLIENT_ID'), os.environ.get('LARK_CLIENT_SECRET'), False)
+            _, content = exector.download(data_source_info['upload_file_id'])
+            text_docs = [content]
         elif dataset_document.data_source_type == 'notion_import':
             loader = NotionLoader.from_document(dataset_document)
             text_docs = loader.load()
@@ -459,6 +546,11 @@ class IndexingRunner:
                 fixed_separator=separator,
                 separators=["\n\n", "。", ".", " ", ""]
             )
+        elif processing_rule.mode == "lark":
+
+            # Automatic segmentation
+            character_splitter = MD2HtmlSplitter(split_chunk_size=150, single_block_overlap=20, mul_block_overlap_threshold=20,
+                                                 mul_block_overlap_ratio=2)
         else:
             # Automatic segmentation
             character_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -612,6 +704,32 @@ class IndexingRunner:
             all_documents.extend(split_documents)
 
         return all_documents
+
+    def _split_lark_to_documents_for_estimate(self, text_doc: List[str], splitter: TextSplitter,
+                                              processing_rule: DatasetProcessRule) -> List[Document]:
+        """
+        Split the text documents into nodes.
+        """
+        # document clean
+        document_text = self._document_clean(text_doc, processing_rule)
+        text_doc.page_content = document_text
+
+        # parse document to nodes
+        documents = splitter.split_documents([text_doc])
+
+        split_documents = []
+        for document in documents:
+            if document.page_content is None or not document.page_content.strip():
+                continue
+            doc_id = str(uuid.uuid4())
+            hash = helper.generate_text_hash(document.page_content)
+
+            document.metadata['doc_id'] = doc_id
+            document.metadata['doc_hash'] = hash
+
+            split_documents.append(document)
+
+        return split_documents
 
     def _document_clean(self, text: str, processing_rule: DatasetProcessRule) -> str:
         """

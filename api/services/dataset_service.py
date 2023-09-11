@@ -37,7 +37,7 @@ from tasks.update_segment_index_task import update_segment_index_task
 from tasks.recover_document_indexing_task import recover_document_indexing_task
 from tasks.update_segment_keyword_index_task import update_segment_keyword_index_task
 from tasks.delete_segment_from_index_task import delete_segment_from_index_task
-
+from utils.lark_download.download import LarkWiki2Md
 
 class DatasetService:
 
@@ -439,6 +439,9 @@ class DocumentService:
                 if document_data["data_source"]["type"] == "upload_file":
                     upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
                     count = len(upload_file_list)
+                elif document_data["data_source"]["type"] == "lark_import":
+                    upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
+                    count = len(upload_file_list)
                 elif document_data["data_source"]["type"] == "notion_import":
                     notion_info_list = document_data["data_source"]['info_list']['notion_info_list']
                     for notion_info in notion_info_list:
@@ -489,6 +492,13 @@ class DocumentService:
                         rules=json.dumps(DatasetProcessRule.AUTOMATIC_RULES),
                         created_by=account.id
                     )
+                elif process_rule["mode"] == "lark":
+                    dataset_process_rule = DatasetProcessRule(
+                        dataset_id=dataset.id,
+                        mode=process_rule["mode"],
+                        rules=json.dumps(DatasetProcessRule.AUTOMATIC_RULES),
+                        created_by=account.id
+                    )
                 db.session.add(dataset_process_rule)
                 db.session.commit()
             position = DocumentService.get_documents_position(dataset.id)
@@ -515,6 +525,25 @@ class DocumentService:
                                                               document_data["doc_language"],
                                                               data_source_info, created_from, position,
                                                               account, file_name, batch)
+                    db.session.add(document)
+                    db.session.flush()
+                    document_ids.append(document.id)
+                    documents.append(document)
+                    position += 1
+            elif document_data["data_source"]["type"] == "lark_import":
+                upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
+                for file_id in upload_file_list:
+                    exector = LarkWiki2Md(current_app.config.get('LARK_CLIENT_ID'), current_app.config.get('LARK_CLIENT_SECRET'), False)
+                    title, _ = exector.download(file_id)
+                    data_source_info = {
+                        "upload_file_id": file_id,
+                    }
+                    document = DocumentService.build_document(dataset, dataset_process_rule.id,
+                                                              document_data["data_source"]["type"],
+                                                              document_data["doc_form"],
+                                                              document_data["doc_language"],
+                                                              data_source_info, created_from, position,
+                                                              account, title, batch)
                     db.session.add(document)
                     db.session.flush()
                     document_ids.append(document.id)
@@ -632,6 +661,13 @@ class DocumentService:
                     rules=json.dumps(DatasetProcessRule.AUTOMATIC_RULES),
                     created_by=account.id
                 )
+            elif process_rule["mode"] == "lark":
+                dataset_process_rule = DatasetProcessRule(
+                    dataset_id=dataset.id,
+                    mode=process_rule["mode"],
+                    rules=json.dumps(DatasetProcessRule.AUTOMATIC_RULES),
+                    created_by=account.id
+                )
             db.session.add(dataset_process_rule)
             db.session.commit()
             document.dataset_process_rule_id = dataset_process_rule.id
@@ -652,6 +688,16 @@ class DocumentService:
                         raise FileNotExistsError()
 
                     file_name = file.name
+                    data_source_info = {
+                        "upload_file_id": file_id,
+                    }
+            elif document_data["data_source"]["type"] == "lark_import":
+                upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
+                for file_id in upload_file_list:
+                    exector = LarkWiki2Md(current_app.config.get('LARK_CLIENT_ID'), current_app.config.get('LARK_CLIENT_SECRET'), False)
+                    title, _ = exector.download(file_id)
+
+                    file_name = title
                     data_source_info = {
                         "upload_file_id": file_id,
                     }
@@ -706,6 +752,9 @@ class DocumentService:
     def save_document_without_dataset_id(tenant_id: str, document_data: dict, account: Account):
         count = 0
         if document_data["data_source"]["type"] == "upload_file":
+            upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
+            count = len(upload_file_list)
+        elif document_data["data_source"]["type"] == "lark_import":
             upload_file_list = document_data["data_source"]["info_list"]['file_info_list']['file_ids']
             count = len(upload_file_list)
         elif document_data["data_source"]["type"] == "notion_import":
@@ -805,6 +854,8 @@ class DocumentService:
 
         if args['process_rule']['mode'] == 'automatic':
             args['process_rule']['rules'] = {}
+        elif args['process_rule']['mode'] == 'lark':
+            args['process_rule']['rules'] = {}
         else:
             if 'rules' not in args['process_rule'] or not args['process_rule']['rules']:
                 raise ValueError("Process rule rules is required")
@@ -879,6 +930,8 @@ class DocumentService:
             raise ValueError("Process rule mode is invalid")
 
         if args['process_rule']['mode'] == 'automatic':
+            args['process_rule']['rules'] = {}
+        elif args['process_rule']['mode'] == 'lark':
             args['process_rule']['rules'] = {}
         else:
             if 'rules' not in args['process_rule'] or not args['process_rule']['rules']:

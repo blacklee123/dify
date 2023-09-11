@@ -109,7 +109,7 @@ class DatasetProcessRule(db.Model):
     created_at = db.Column(db.DateTime, nullable=False,
                            server_default=db.text('CURRENT_TIMESTAMP(0)'))
 
-    MODES = ['automatic', 'custom']
+    MODES = ['automatic', 'custom', 'lark']
     PRE_PROCESSING_RULES = ['remove_stopwords', 'remove_extra_spaces', 'remove_urls_emails']
     AUTOMATIC_RULES = {
         'pre_processing_rules': [
@@ -213,7 +213,7 @@ class Document(db.Model):
         255), nullable=False, server_default=db.text("'text_model'::character varying"))
     doc_language = db.Column(db.String(255), nullable=True)
 
-    DATA_SOURCES = ['upload_file', 'notion_import']
+    DATA_SOURCES = ['upload_file', 'notion_import', 'lark_import']
 
     @property
     def display_status(self):
@@ -265,6 +265,8 @@ class Document(db.Model):
                             'created_at': file_detail.created_at.timestamp()
                         }
                     }
+            elif self.data_source_type == 'lark_import':
+                return json.loads(self.data_source_info)
             elif self.data_source_type == 'notion_import':
                 return json.loads(self.data_source_info)
         return {}
