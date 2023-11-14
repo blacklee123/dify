@@ -2,7 +2,7 @@ version: '3.1'
 services:
   # API service
   api:
-    image: blacklee123/dify-api:0.3.15
+    image: harbor.pandadagames.net/qaq/dify-api:0.3.22
     restart: always
     environment:
       EDITION: CLOUD
@@ -27,11 +27,11 @@ services:
       # The URL for Web APP api server, refers to the Web App base URL of WEB service if web app domain is different from
       # console or api domain.
       # example: http://udify.app
-      APP_API_URL: ''
+      APP_API_URL: 'https://dify.pandadagames.net'
       # The URL for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from
       # console or api domain.
       # example: http://udify.app
-      APP_WEB_URL: ''
+      APP_WEB_URL: 'https://dify.pandadagames.net'
       # When enabled, migrations will be executed prior to application startup and the application will start after the migrations have completed.
       MIGRATION_ENABLED: 'true'
       # The configurations of postgres database connection.
@@ -116,6 +116,10 @@ services:
       SENTRY_PROFILES_SAMPLE_RATE: 1.0
       LARK_CLIENT_ID: ''
       LARK_CLIENT_SECRET: ''
+      HOSTED_OPENAI_ENABLED: false
+      HOSTED_OPENAI_API_KEY: ''
+      HOSTED_OPENAI_QUOTA_LIMIT: 200000
+      ADMIN_API_KEY: ''
     depends_on:
       - db
       - redis
@@ -123,11 +127,12 @@ services:
     volumes:
       # Mount the storage directory to the container, for storing user files.
       - ./volumes/app/storage:/app/api/storage
-
+    ports:
+      - '5001:5001'
   # worker service
   # The Celery worker for processing the queue.
   worker:
-    image: blacklee123/dify-api:0.3.15
+    image: harbor.pandadagames.net/qaq/dify-api:0.3.22
     restart: always
     environment:
       # Startup mode, 'worker' starts the Celery worker for processing the queue.
@@ -169,6 +174,12 @@ services:
       MAIL_DEFAULT_SEND_FROM: 'YOUR EMAIL FROM (eg: no-reply <no-reply@dify.ai>)'
       # the api-key for resend (https://resend.com)
       RESEND_API_KEY: ''
+      LARK_CLIENT_ID: ''
+      LARK_CLIENT_SECRET: ''
+      HOSTED_OPENAI_ENABLED: false
+      HOSTED_OPENAI_API_KEY: ''
+      HOSTED_OPENAI_QUOTA_LIMIT: 200000
+      ADMIN_API_KEY: ''
     depends_on:
       - db
       - redis
@@ -179,7 +190,7 @@ services:
 
   # Frontend web application.
   web:
-    image: blacklee123/dify-web:0.3.15
+    image: harbor.pandadagames.net/qaq/dify-web:0.3.22
     restart: always
     environment:
       EDITION: CLOUD
@@ -191,8 +202,8 @@ services:
       # console or api domain.
       # example: http://udify.app
       APP_API_URL: 'https://dify.pandadagames.net'
-      NEXT_PUBLIC_API_PREFIX: '/console/api'
-      NEXT_PUBLIC_PUBLIC_API_PREFIX: '/api'
+      NEXT_PUBLIC_API_PREFIX: 'https://dify.pandadagames.net/console/api'
+      NEXT_PUBLIC_PUBLIC_API_PREFIX: 'https://dify.pandadagames.net/api'
       # The DSN for Sentry error reporting. If not set, Sentry error reporting will be disabled.
       SENTRY_DSN: ''
 

@@ -97,10 +97,10 @@ class OpenAIModel(BaseLLM):
         :param callbacks:
         :return:
         """
-        if self.name == 'gpt-4' \
-                and self.model_provider.provider.provider_type == ProviderType.SYSTEM.value \
-                and self.model_provider.provider.quota_type == ProviderQuotaType.TRIAL.value:
-            raise ModelCurrentlyNotSupportError("Dify Hosted OpenAI GPT-4 currently not support.")
+        # if self.name == 'gpt-4' \
+        #         and self.model_provider.provider.provider_type == ProviderType.SYSTEM.value \
+        #         and self.model_provider.provider.quota_type == ProviderQuotaType.TRIAL.value:
+        #     raise ModelCurrentlyNotSupportError("Dify Hosted OpenAI GPT-4 currently not support.")
 
         prompts = self._get_prompt_from_messages(messages)
         return self._client.generate([prompts], stop, callbacks)

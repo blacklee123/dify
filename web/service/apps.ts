@@ -24,6 +24,34 @@ export const deleteApp: Fetcher<CommonResponse, string> = (appID) => {
   return del(`apps/${appID}`) as Promise<CommonResponse>
 }
 
+export const insertExploreAppList: Fetcher<CommonResponse, {
+  app_id: string
+  desc?: string
+  copyright?: string
+  privacy_policy?: string
+  language: string
+  category: string
+  position: number
+  token: string
+}> = (body: {
+  app_id: string
+  desc?: string
+  copyright?: string
+  privacy_policy?: string
+  language: string
+  category: string
+  position: number
+  token: string
+}) => {
+  console.log(body)
+  const headers = new Map()
+  headers.set('Authorization', `Bearer ${body.token}`)
+  return post('/admin/insert-explore-apps', {
+    body,
+    headers,
+  }) as Promise<CommonResponse>
+}
+
 export const updateAppSiteStatus: Fetcher<AppDetailResponse, { url: string; body: Record<string, any> }> = ({ url, body }) => {
   return post(url, { body }) as Promise<AppDetailResponse>
 }

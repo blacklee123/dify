@@ -1,4 +1,4 @@
-FROM blacklee123/dify-api:base
+FROM harbor.pandadagames.net/qaq/dify-api:base
 
 LABEL maintainer="15656564262@163.com"
 

@@ -67,9 +67,9 @@ class OpenAIProvider(BaseModelProvider):
                 }
             ]
 
-            if self.provider.provider_type == ProviderType.SYSTEM.value \
-                    and self.provider.quota_type == ProviderQuotaType.TRIAL.value:
-                models = [item for item in models if item['id'] not in ['gpt-4', 'gpt-4-32k']]
+            # if self.provider.provider_type == ProviderType.SYSTEM.value \
+            #         and self.provider.quota_type == ProviderQuotaType.TRIAL.value:
+            #     models = [item for item in models if item['id'] not in ['gpt-4', 'gpt-4-32k']]
 
             return models
         elif model_type == ModelType.EMBEDDINGS:

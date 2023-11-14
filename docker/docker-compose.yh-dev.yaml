@@ -2,7 +2,7 @@ version: '3.1'
 services:
   # API service
   api:
-    image: blacklee123/dify-api:0.3.20
+    image: harbor.pandadagames.net/qaq/dify-api:0.3.22
     restart: always
     environment:
       EDITION: CLOUD
@@ -132,7 +132,7 @@ services:
   # worker service
   # The Celery worker for processing the queue.
   worker:
-    image: blacklee123/dify-api:0.3.20
+    image: harbor.pandadagames.net/qaq/dify-api:0.3.22
     restart: always
     environment:
       # Startup mode, 'worker' starts the Celery worker for processing the queue.
@@ -190,7 +190,7 @@ services:
 
   # Frontend web application.
   web:
-    image: blacklee123/dify-web:0.3.20
+    image: harbor.pandadagames.net/qaq/dify-web:0.3.22
     restart: always
     environment:
       EDITION: CLOUD

@@ -4,6 +4,9 @@ module.exports = {
     './app/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
   ],
+  corePlugins: {
+    preflight: false, // 添加这一行
+  },
   theme: {
     typography: require('./typography'),
     extend: {

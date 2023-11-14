@@ -1,7 +1,7 @@
-TAG?=0.3.20
-VERSION:=0.3.20
+TAG?=0.3.22
+VERSION:=0.3.22
 NAME:=dify-api
-DOCKER_REPOSITORY:=blacklee123
+DOCKER_REPOSITORY:=harbor.pandadagames.net/qaq
 DOCKER_IMAGE_NAME:=$(DOCKER_REPOSITORY)/$(NAME)
 # GIT_COMMIT:=$(shell git describe --dirty --always)
 EXTRA_RUN_ARGS?=
