@@ -1,29 +1,36 @@
 'use client'
 import type { FC } from 'react'
-import React from 'react'
+import React, { useRef } from 'react'
 import { useContext } from 'use-context-selector'
 import produce from 'immer'
-import { useBoolean } from 'ahooks'
+import { useBoolean, useScroll } from 'ahooks'
 import DatasetConfig from '../dataset-config'
+import Tools from '../tools'
 import ChatGroup from '../features/chat-group'
 import ExperienceEnchanceGroup from '../features/experience-enchance-group'
 import Toolbox from '../toolbox'
+import HistoryPanel from '../config-prompt/conversation-histroy/history-panel'
+import ConfigVision from '../config-vision'
 import AddFeatureBtn from './feature/add-feature-btn'
-import AutomaticBtn from './automatic/automatic-btn'
-import type { AutomaticRes } from './automatic/get-automatic-res'
-import GetAutomaticResModal from './automatic/get-automatic-res'
 import ChooseFeature from './feature/choose-feature'
 import useFeature from './feature/use-feature'
+import AdvancedModeWaring from '@/app/components/app/configuration/prompt-mode/advanced-mode-waring'
 import ConfigContext from '@/context/debug-configuration'
 import ConfigPrompt from '@/app/components/app/configuration/config-prompt'
 import ConfigVar from '@/app/components/app/configuration/config-var'
 import type { PromptVariable } from '@/models/debug'
-import { AppType } from '@/types/app'
+import { AppType, ModelModeType } from '@/types/app'
 import { useProviderContext } from '@/context/provider-context'
+import { useModalContext } from '@/context/modal-context'
 
 const Config: FC = () => {
   const {
     mode,
+    isAdvancedMode,
+    modelModeType,
+    canReturnToSimpleMode,
+    hasSetBlockStatus,
+    showHistoryModal,
     introduction,
     setIntroduction,
     modelConfig,
@@ -38,12 +45,16 @@ const Config: FC = () => {
     setSpeechToTextConfig,
     citationConfig,
     setCitationConfig,
+    moderationConfig,
+    setModerationConfig,
   } = useContext(ConfigContext)
   const isChatApp = mode === AppType.chat
   const { speech2textDefaultModel } = useProviderContext()
+  const { setShowModerationSettingModal } = useModalContext()
 
   const promptTemplate = modelConfig.configs.prompt_template
   const promptVariables = modelConfig.configs.prompt_variables
+  // simple mode
   const handlePromptChange = (newTemplate: string, newVariables: PromptVariable[]) => {
     const newModelConfig = produce(modelConfig, (draft) => {
       draft.configs.prompt_template = newTemplate
@@ -96,31 +107,63 @@ const Config: FC = () => {
         draft.enabled = value
       }))
     },
+    moderation: moderationConfig.enabled,
+    setModeration: (value) => {
+      setModerationConfig(produce(moderationConfig, (draft) => {
+        draft.enabled = value
+      }))
+      if (value && !moderationConfig.type) {
+        setShowModerationSettingModal({
+          payload: {
+            enabled: true,
+            type: 'keywords',
+            config: {
+              keywords: '',
+              inputs_config: {
+                enabled: true,
+                preset_response: '',
+              },
+            },
+          },
+          onSaveCallback: setModerationConfig,
+          onCancelCallback: () => {
+            setModerationConfig(produce(moderationConfig, (draft) => {
+              draft.enabled = false
+              showChooseFeatureTrue()
+            }))
+          },
+        })
+        showChooseFeatureFalse()
+      }
+    },
   })
 
   const hasChatConfig = isChatApp && (featureConfig.openingStatement || featureConfig.suggestedQuestionsAfterAnswer || (featureConfig.speechToText && !!speech2textDefaultModel) || featureConfig.citation)
   const hasToolbox = false
 
-  const [showAutomatic, { setTrue: showAutomaticTrue, setFalse: showAutomaticFalse }] = useBoolean(false)
-  const handleAutomaticRes = (res: AutomaticRes) => {
-    const newModelConfig = produce(modelConfig, (draft) => {
-      draft.configs.prompt_template = res.prompt
-      draft.configs.prompt_variables = res.variables.map(key => ({ key, name: key, type: 'string', required: true }))
-    })
-    setModelConfig(newModelConfig)
-    setPrevPromptConfig(modelConfig.configs)
-    if (mode === AppType.chat)
-      setIntroduction(res.opening_statement)
-    showAutomaticFalse()
-  }
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const wrapScroll = useScroll(wrapRef)
+  const toBottomHeight = (() => {
+    if (!wrapRef.current)
+      return 999
+    const elem = wrapRef.current
+    const { clientHeight } = elem
+    const value = (wrapScroll?.top || 0) + clientHeight
+    return value
+  })()
+
   return (
     <>
-      <div className="pb-[20px]">
-        <div className='flex justify-between items-center mb-4'>
-          <AddFeatureBtn onClick={showChooseFeatureTrue} />
-          <AutomaticBtn onClick={showAutomaticTrue}/>
-        </div>
-
+      <div
+        ref={wrapRef}
+        className="relative px-6 pb-[50px] overflow-y-auto h-full"
+      >
+        <AddFeatureBtn toBottomHeight={toBottomHeight} onClick={showChooseFeatureTrue} />
+        {
+          (isAdvancedMode && canReturnToSimpleMode) && (
+            <AdvancedModeWaring />
+          )
+        }
         {showChooseFeature && (
           <ChooseFeature
             isShow={showChooseFeature}
@@ -131,14 +174,7 @@ const Config: FC = () => {
             showSpeechToTextItem={!!speech2textDefaultModel}
           />
         )}
-        {showAutomatic && (
-          <GetAutomaticResModal
-            mode={mode as AppType}
-            isShow={showAutomatic}
-            onClose={showAutomaticFalse}
-            onFinished={handleAutomaticRes}
-          />
-        )}
+
         {/* Template */}
         <ConfigPrompt
           mode={mode as AppType}
@@ -155,6 +191,18 @@ const Config: FC = () => {
 
         {/* Dataset */}
         <DatasetConfig />
+
+        <Tools />
+
+        <ConfigVision />
+
+        {/* Chat History */}
+        {isAdvancedMode && isChatApp && modelModeType === ModelModeType.completion && (
+          <HistoryPanel
+            showWarning={!hasSetBlockStatus.history}
+            onShowEditModal={showHistoryModal}
+          />
+        )}
 
         {/* ChatConifig */}
         {
@@ -181,8 +229,8 @@ const Config: FC = () => {
 
         {/* Toolbox */}
         {
-          hasToolbox && (
-            <Toolbox searchToolConfig={false} sensitiveWordAvoidanceConifg={false} />
+          moderationConfig.enabled && (
+            <Toolbox showModerationSettings />
           )
         }
       </div>

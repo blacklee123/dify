@@ -1,4 +1,4 @@
-from core.login.login import login_required
+from libs.login import login_required
 from flask_restful import Resource
 from flask import request, current_app
 

@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import s from './style.module.css'
-import { fetchDataDetail, fetchDatasetRelatedApps } from '@/service/datasets'
+import { fetchDatasetDetail, fetchDatasetRelatedApps } from '@/service/datasets'
 import type { RelatedApp } from '@/models/datasets'
 import { getLocaleOnClient } from '@/i18n/client'
 import AppSideBar from '@/app/components/app-sidebar'
@@ -29,8 +29,6 @@ import AppIcon from '@/app/components/base/app-icon'
 import Loading from '@/app/components/base/loading'
 import DatasetDetailContext from '@/context/dataset-detail'
 import { DataSourceType } from '@/models/datasets'
-
-// import { fetchDatasetDetail } from '@/service/datasets'
 
 export type IAppDetailLayoutProps = {
   children: React.ReactNode
@@ -45,7 +43,7 @@ const LikedItem: FC<{ type?: 'plugin' | 'app'; appStatus?: boolean; detail: Rela
   return (
     <Link className={s.itemWrapper} href={`/app/${detail?.id}/overview`}>
       <div className={s.iconWrapper}>
-        <AppIcon size='tiny' />
+        <AppIcon size='tiny' icon={detail?.icon} background={detail?.icon_background}/>
         {type === 'app' && (
           <div className={s.statusPoint}>
             <Indicator color={appStatus ? 'green' : 'gray'} />
@@ -94,9 +92,9 @@ const DatasetDetailLayout: FC<IAppDetailLayoutProps> = (props) => {
   const hideSideBar = /documents\/create$/.test(pathname)
   const { t } = useTranslation()
   const { data: datasetRes, error, mutate: mutateDatasetRes } = useSWR({
-    action: 'fetchDataDetail',
+    url: 'fetchDatasetDetail',
     datasetId,
-  }, apiParams => fetchDataDetail(apiParams.datasetId))
+  }, apiParams => fetchDatasetDetail(apiParams.datasetId))
 
   const { data: relatedApps } = useSWR({
     action: 'fetchDatasetRelatedApps',

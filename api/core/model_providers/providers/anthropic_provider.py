@@ -9,7 +9,7 @@ from langchain.schema import HumanMessage
 
 from core.helper import encrypter
 from core.model_providers.models.base import BaseProviderModel
-from core.model_providers.models.entity.model_params import ModelKwargsRules, KwargRule
+from core.model_providers.models.entity.model_params import ModelKwargsRules, KwargRule, ModelMode
 from core.model_providers.models.entity.provider import ModelFeature
 from core.model_providers.models.llm.anthropic_model import AnthropicModel
 from core.model_providers.models.llm.base import ModelType
@@ -34,10 +34,12 @@ class AnthropicProvider(BaseModelProvider):
                 {
                     'id': 'claude-instant-1',
                     'name': 'claude-instant-1',
+                    'mode': ModelMode.CHAT.value,
                 },
                 {
                     'id': 'claude-2',
                     'name': 'claude-2',
+                    'mode': ModelMode.CHAT.value,
                     'features': [
                         ModelFeature.AGENT_THOUGHT.value
                     ]
@@ -45,6 +47,9 @@ class AnthropicProvider(BaseModelProvider):
             ]
         else:
             return []
+
+    def _get_text_generation_model_mode(self, model_name) -> str:
+        return ModelMode.CHAT.value
 
     def get_model_class(self, model_type: ModelType) -> Type[BaseProviderModel]:
         """
@@ -69,11 +74,11 @@ class AnthropicProvider(BaseModelProvider):
         :return:
         """
         return ModelKwargsRules(
-            temperature=KwargRule[float](min=0, max=1, default=1),
-            top_p=KwargRule[float](min=0, max=1, default=0.7),
+            temperature=KwargRule[float](min=0, max=1, default=1, precision=2),
+            top_p=KwargRule[float](min=0, max=1, default=0.7, precision=2),
             presence_penalty=KwargRule[float](enabled=False),
             frequency_penalty=KwargRule[float](enabled=False),
-            max_tokens=KwargRule[int](alias="max_tokens_to_sample", min=10, max=100000, default=256),
+            max_tokens=KwargRule[int](alias="max_tokens_to_sample", min=10, max=100000, default=256, precision=0),
         )
 
     @classmethod
@@ -167,7 +172,7 @@ class AnthropicProvider(BaseModelProvider):
 
     def should_deduct_quota(self):
         if hosted_model_providers.anthropic and \
-                hosted_model_providers.anthropic.quota_limit and hosted_model_providers.anthropic.quota_limit > 0:
+                hosted_model_providers.anthropic.quota_limit and hosted_model_providers.anthropic.quota_limit > -1:
             return True
 
         return False

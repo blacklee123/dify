@@ -1,5 +1,5 @@
 import type { Annotation, MessageRating } from '@/models/log'
-
+import type { VisionFile } from '@/types/app'
 export type MessageMore = {
   time: string
   tokens: number
@@ -66,9 +66,18 @@ export type IChatItem = {
   annotation?: Annotation
   useCurrentUserAvatar?: boolean
   isOpeningStatement?: boolean
+  log?: { role: string; text: string }[]
+  message_files?: VisionFile[]
 }
 
 export type MessageEnd = {
   id: string
   retriever_resources?: CitationItem[]
+}
+
+export type MessageReplace = {
+  id: string
+  task_id: string
+  answer: string
+  conversation_id: string
 }
